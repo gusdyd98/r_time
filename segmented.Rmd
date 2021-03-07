@@ -1,0 +1,57 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+if(!require(segmented)) { install.packages('segmented') }
+library(segmented)
+
+x<-c(1:60)
+y<-c(rnorm(20), 2+rnorm(20), 1+rnorm(20))
+df<-data.frame(x=x, y=y)
+fit_lm<-lm(y~1+x)
+fit_segmented<-segmented(fit_lm, seg.Z=~x, npsi=2)
+
+summary(fit_segmented)
+```
+
+```{r}
+plot(fit_segmented); 
+points(df)
+lines.segmented(fit_segmented)
+points.segmented(fit_segmented)
+
+```
+```{r}
+
+```
+```{r}
+plot(b)
+```
+```{r}
+plot(f); lines(b)
+```
+
+```{r}
+if(!require(EnvCpt)) { install.packages('EnvCpt')}
+library(EnvCpt)
+
+fit_envcpt<-envcpt(y)
+```
+```{r}
+fit_envcpt$summary
+```
+```{r}
+plot(fit_envcpt)
+```
+
+```{r}
+fit_envcpt$meancpt@cpts
+```
+```{r}
+fit_envcpt$meancpt@param.est
+```
+
+

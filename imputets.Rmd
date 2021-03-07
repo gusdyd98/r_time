@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+if(!require(imputeTS)) install.packages('imputeTS')
+library(imputeTS)
+
+x<-ts(c(1,2,3,4,5,6,7,8,NA,NA,11,12))
+
+na_mean(x)
+
+```
+```{r}
+na_mean(x, option="median")
+```
+
+```{r}
+#결측값 대치 : na_interpolation()함수
+na_interpolation(x)
+```
+```{r}
+#결측값 대치 : na_kalman()함수
+imp<-na_kalman(tsAirgap) 
+plotNA.imputations(tsAirgap, imp, tsAirgapComplete)
+
+library(ggplot2)
+ggplot_na_imputations(tsAirgap, imp, tsAirgapComplete)
+ggplot_na_intervals(tsHeating)
+```
+```{r}
+ggplot_na_gapsize(tsNH4)
+```
+```{r}
+tsAirgap.imp<-na_mean(tsAirgap)
+ggplot_na_imputations(tsAirgap, tsAirgap.imp)
+```
+```{r}
+statsNA(tsNH4)
+```
+

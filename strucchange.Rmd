@@ -1,0 +1,54 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+if(!require(strucchange)) { install.packages('strucchange') }
+library(strucchange)
+
+set.seed(200)
+
+y<-c(rnorm(20), 2+rnorm(20), 1+rnorm(20))
+y
+b<-breakpoints(y~1)
+b
+f<-Fstats(y~1)
+f
+summary(b)
+```
+```{r}
+summary(f)
+```
+```{r}
+plot(y); abline(v=c(20,40), col='red')
+```
+```{r}
+plot(b)
+```
+```{r}
+plot(f); lines(b)
+```
+
+```{r}
+if(!require(EnvCpt)) { install.packages('EnvCpt')}
+library(EnvCpt)
+
+fit_envcpt<-envcpt(y)
+```
+```{r}
+fit_envcpt$summary
+```
+```{r}
+plot(fit_envcpt)
+```
+
+```{r}
+fit_envcpt$meancpt@cpts
+```
+```{r}
+fit_envcpt$meancpt@param.est
+```
+
+
