@@ -1,0 +1,216 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+#이상점의 종류
+
+1) Additive Outlier (AO)
+한 시점(T)에서만 시계열의 관측값에 영향을 미치는 이상점으로, 시계열을 관측하는 과정에서 발생하는 오차이다.
+고립된 spike 형태를 보인다.
+
+2) Innovational Outlier (IO)
+한 시점(T)의 시계열의 관측값에만 영향을 미치지 않고, 이상점이 발생한 이후의 관측값에 지속적으로 영향을 미치는 형태의 이상점이다. T시점 이후의 모든 관측값에 어떤 효과가 더해진 형태이다. (연속적으로 발생한 일련의 AO효과로도 볼 수 있음)
+
+3) Transient(or Temporary) Change (TC)
+관측값의 수준에 생긴 변화가 단기간 지속되고 또한 변화의 크기도 점차적으로 줄어드는 경우이다. 감쇠(damping) 효과의 δ의 크기에 의해 지수적으로 감소한다.
+
+4) Level Shift (LS) 또는 Seasonal Level Shift (SLS)
+한 시점(T) 이후의 모든 관측값의 수준에 항구적인 변화가 발생하는 경우이다. T 시점 이후의 모든 관측값에 동일한 효과가 더해져 시계열의 수준이 변화한 형태이다. 시스템의 변화 또는 관측기기에 변화가 발생한 경우 등에 해당한다.
+
+5) Consecutive AO's 또는 Patches of Outliers
+이상점이 연속적으로 발생하는 경우 연속적인 AO가 발생했다고 간주한다. IO와 TC등이 연속적인 AO에 의해 근사될 수 있다.
+
+```{r}
+ts<-ts(rep(0,50))
+ts
+```
+```{r}
+ts[20]<-1
+ts
+```
+```{r}
+plot(ts)
+```
+```{r}
+LS<-filter(ts, filter=1, method='recursive')
+plot(LS, main='Level Shift - TC delta = 1', type='s')
+```
+
+```{r}
+AO<-filter(ts, filter=0, method='recursive')
+plot(AO, main='Additive Outlier - TC delta = 0', type='s')
+```
+```{r}
+TC_0_3<-filter(ts, filter=0.3, method='recursive')
+TC_0_8<-filter(ts, filter=0.8, method='recursive')
+plot(TC_0_3, main='TC delta = 0.3')
+plot(TC_0_8, main='TC delta = 0.8')
+```
+
+R 패키지 {tsoutlier} 이용하여 이상점 탐지하기
+```{r}
+if(!require(tsoutliers)) install.packages('tsoutliers')
+library(tsoutliers)
+
+
+```
+```{r}
+airmiles
+plot(airmiles)
+```
+```{r}
+out<-tso(log(airmiles), types=c('TC','AO','LS','IO','SLS'))
+out
+```
+```{r}
+plot(out)
+```
+```{r}
+out$outliers
+```
+
+```{r}
+#탐지된 이상점의 시간 색인
+(out_id<-out$outliers$ind)
+```
+```{r}
+#탐지된 이상점의 달력 년 (시간)
+out$outliers$time
+```
+
+#chicken{fma} 자료에 대해 이상점 탐지 분석 수행
+```{r}
+if(!require(tsoutliers)) install.packages('tsoutliers')
+library(tsoutliers)
+if(!require(expsmooth)) install.packages('expsmooth')
+library(expsmooth)
+if(!require(fma)) install.packages('fma')
+library(fma)
+
+chicken
+str(chicken)
+class(chicken)
+
+#어떻게 ts 객체의 data로 만들까? 먼저 이를 알아야 할 것 같다.
+
+outlier<-tsoutliers::tso(chicken, types=c('AO', 'LS', 'TC'), maxit.iloop=10)
+outlier
+
+```
+```{r}
+plot(outlier)
+```
+
+```{r}
+n<-length(chicken)
+LS.df<-outliers('LS',12)
+LS_effect<-outliers.effects(LS.df, n)
+TC.df<-outliers('TC', 20)
+TC_effect<-outliers.effects(TC.df, n)
+xreg.outliers<-cbind(LS_effect, TC_effect)
+xreg.outliers
+```
+
+```{r}
+arima.model<-auto.arima(chicken, xreg=xreg.outliers)
+arima.model
+```
+
+#pairs 함수 : 써볼수 있을지?
+```{r}
+data(airquality)
+pairs(airquality[1:4], panel=panel.smooth)
+```
+
+#시계열 날짜와 객체 다루기
+```{r}
+#lubridate, zoo, xts 패키지
+
+#lubridate : 연, 월, 일 등이 각각 다른 열에 지정된 날짜 읽어오기
+if(!require(tidyverse)) install.packages('tidyverse')
+library(tidyverse)
+if(!require(nycflights13)) install.packages('nycflights13')
+library(nycflights13)
+
+flights %>%
+  select(year, month, day)
+
+flights
+```
+
+```{r}
+library(lubridate)
+f_day<-flights %>%
+  select(year, month, day) %>%
+  mutate(depart=make_date(year, month, day))
+f_day
+```
+
+```{r}
+f_min<-flights %>%
+  select(year, month, day, hour, minute) %>%
+  mutate(depart=make_datetime(year, month, day, hour, minute))
+f_min
+```
+
+
+#zoo, xts 패키지 이용하여 특정 형식으로 저장된 날짜 읽어오기
+```{r}
+df<-data.frame(Date=c('10/8/2013', '10/9/2019', '10/10/2019'), 
+               Close=c(868, 855, 865))
+
+if(!require(zoo)) install.packages('zoo')
+library(zoo)
+
+(ZOO<-zoo(df$Close, order.by=as.Date(df$Date, format='%m/%d/%Y')))
+
+```
+
+```{r}
+#xts 패키지 사용하기
+if(!require(xts)) install.packages('xts')
+library(xts)
+
+(XTS<-xts(df$Close, order.by=as.Date(df$Date, format='%m/%d/%Y')))
+
+```
+
+```{r}
+#lubridate package 사용한 예제
+data("lakers")
+
+str(lakers)
+lakers
+```
+
+```{r}
+lakers$date<-ymd(lakers$date); head(lakers)
+```
+
+```{r}
+lakers %>%
+  ggplot(aes(date, y=0, col=game_type))+
+  geom_point()
+```
+
+```{r}
+lakers %>%
+  ggplot(aes(date, fill=game_type))+
+  geom_bar()
+```
+
+```{r}
+lakers %>%
+  ggplot(aes(date))+
+  geom_freqpoly()
+```
+
+```{r}
+lakers %>%
+  ggplot(aes(date))+
+  geom_freqpoly(binwidth=5)
+```
+
