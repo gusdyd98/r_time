@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+#install.packages('gcookbook')
+library(gcookbook)
+```
+```{r}
+if(!require(changepoint)) install.packages('changepoint')
+library(changepoint)
+#set.seed(100)
+y=c(rnorm(2000,0,1), rnorm(2000,5,1), rnorm(2000,2,1))
+
+ansmean=cpt.mean(y,method='PELT',Q=1)
+cpts(ansmean)
+plot(ansmean, cpt.col='blue')
+
+y
+```
+```{r}
+if(!require(tsoutliers)) install.packages('tsoutliers')
+library(tsoutliers)
+
+set.seed(2000)
+y=c(rnorm(2000,0,1), rnorm(2000,5,1), rnorm(2000,2,1))
+
+ts_y<-ts(y)
+out<-tso(ts_y, types=c('TC','AO','LS','IO','SLS'))
+out
+
+plot(out)
+```
+```{r}
+out$outliers
+```
+
+```{r}
+z<-y
+x<-c('A', 'B')
+a<-data.frame(x, y)
+
+a
+
+b<-ts(a)
+b[,2]
+
+out<-tso(b[,2], types=c('TC','AO','LS','IO','SLS'))
+out
+plot(out)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
