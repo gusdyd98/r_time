@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: 
+  html_notebook: 
+    toc: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+#mtcars{datasets}자료에서 t test 해보기
+```{r}
+data(mtcars)
+mtcars
+boxplot(mtcars$mpg~mtcars$am)
+
+```
+```{r}
+t.test(mtcars$mpg~as.factor(mtcars$am))
+```
+
+#sleep{stats} 자료 : 두 종류의 수면제의 효과 측정 자료로 t검정
+```{r}
+attach(sleep)
+str(sleep)
+t.test(extra[group==1], extra[group==2], paired=TRUE)
+
+```
+
+```{r}
+sleep.d<-with(sleep, extra[group==2]-extra[group==1])
+t.test(sleep.d)
+```
+
+```{r}
+sleep
+```
+
